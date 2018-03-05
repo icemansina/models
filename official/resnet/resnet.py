@@ -37,6 +37,7 @@ import argparse
 import os
 
 import tensorflow as tf
+import official.utils.arg_parsers
 
 _BATCH_NORM_DECAY = 0.997
 _BATCH_NORM_EPSILON = 1e-5
@@ -664,65 +665,20 @@ class ResnetArgParser(argparse.ArgumentParser):
   """
 
   def __init__(self, resnet_size_choices=None):
-    super(ResnetArgParser, self).__init__()
-    self.add_argument(
-        '--data_dir', type=str, default='/tmp/resnet_data',
-        help='The directory where the input data is stored.')
+    super(ResnetArgParser, self).__init__(parents=[
+      official.utils.arg_parsers.LocationParser(data_dir=True, model_dir=True),
+      official.utils.arg_parsers.DeviceParser(multi_gpu=True),
+      official.utils.arg_parsers.SupervisedParser(
+          train_epochs=True, epochs_per_eval=True, batch_size=True),
+      official.utils.arg_parsers.PerformanceParser(
+          num_parallel_calls=True, inter_op=True, intra_op=True),
+      official.utils.arg_parsers.DummyParser(use_synthetic_data=True),
+      official.utils.arg_parsers.ImageModelParser(data_format=True),
+    ])
 
     self.add_argument(
-        '--num_parallel_calls', type=int, default=5,
-        help='The number of records that are processed in parallel '
-        'during input processing. This can be optimized per data set but '
-        'for generally homogeneous data sets, should be approximately the '
-        'number of available CPU cores.')
-
-    self.add_argument(
-        '--model_dir', type=str, default='/tmp/resnet_model',
-        help='The directory where the model will be stored.')
-
-    self.add_argument(
-        '--resnet_size', type=int, default=50,
+        '--resnet_size', "-rs", type=int, default=50,
         choices=resnet_size_choices,
-        help='The size of the ResNet model to use.')
-
-    self.add_argument(
-        '--train_epochs', type=int, default=100,
-        help='The number of epochs to use for training.')
-
-    self.add_argument(
-        '--epochs_per_eval', type=int, default=1,
-        help='The number of training epochs to run between evaluations.')
-
-    self.add_argument(
-        '--batch_size', type=int, default=32,
-        help='Batch size for training and evaluation.')
-
-    self.add_argument(
-        '--data_format', type=str, default=None,
-        choices=['channels_first', 'channels_last'],
-        help='A flag to override the data format used in the model. '
-             'channels_first provides a performance boost on GPU but '
-             'is not always compatible with CPU. If left unspecified, '
-             'the data format will be chosen automatically based on '
-             'whether TensorFlow was built for CPU or GPU.')
-
-    self.add_argument(
-        '--multi_gpu', action='store_true',
-        help='If set, run across all available GPUs.')
-
-    # Advanced args
-    self.add_argument(
-        '--use_synthetic_data', action='store_true',
-        help='If set, use fake data (zeroes) instead of a real dataset. '
-             'This mode is useful for performance debugging, as it removes '
-             'input processing steps, but will not learn anything.')
-
-    self.add_argument(
-        '--inter_op_parallelism_threads', type=int, default=0,
-        help='Number of inter_op_parallelism_threads to use for CPU. '
-             'See TensorFlow config.proto for details.')
-
-    self.add_argument(
-        '--intra_op_parallelism_threads', type=int, default=0,
-        help='Number of intra_op_parallelism_threads to use for CPU. '
-             'See TensorFlow config.proto for details.')
+        help='[default: %(default)s]The size of the ResNet model to use.',
+        metavar="<RS>"
+    )
