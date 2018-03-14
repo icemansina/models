@@ -34,21 +34,36 @@ flags.DEFINE_string('export_path', None,
 
 flags.DEFINE_integer('num_classes', 21, 'Number of classes.')
 
-flags.DEFINE_multi_integer('crop_size', [513, 513],
-                           'Crop size [height, width].')
+# flags.DEFINE_multi_integer('crop_size', [513, 513],
+#                            'Crop size [height, width].')
+flags.DEFINE_integer('crop_height', 513, 
+                           'Image crop size height during training.')
+flags.DEFINE_integer('crop_width', 513, 
+                           'Image crop size width during training.')
 
 # For `xception_65`, use atrous_rates = [12, 24, 36] if output_stride = 8, or
 # rates = [6, 12, 18] if output_stride = 16. For `mobilenet_v2`, use None. Note
 # one could use different atrous_rates/output_stride during training/evaluation.
-flags.DEFINE_multi_integer('atrous_rates', None,
+# flags.DEFINE_multi_integer('atrous_rates', None,
+#                            'Atrous rates for atrous spatial pyramid pooling.')
+flags.DEFINE_integer('atrous_rates1', 6,
                            'Atrous rates for atrous spatial pyramid pooling.')
+flags.DEFINE_integer('atrous_rates2', 12,
+                           'Atrous rates for atrous spatial pyramid pooling.')
+flags.DEFINE_integer('atrous_rates3', 18,
+                           'Atrous rates for atrous spatial pyramid pooling.')
+
+
 
 flags.DEFINE_integer('output_stride', 8,
                      'The ratio of input to output spatial resolution.')
 
 # Change to [0.5, 0.75, 1.0, 1.25, 1.5, 1.75] for multi-scale inference.
-flags.DEFINE_multi_float('inference_scales', [1.0],
+# flags.DEFINE_multi_float('inference_scales', [1.0],
+#                          'The scales to resize images for inference.')
+flags.DEFINE_float('inference_scales', 1.0,
                          'The scales to resize images for inference.')
+
 
 flags.DEFINE_bool('add_flipped_images', False,
                   'Add flipped images during inference or not.')
@@ -83,8 +98,8 @@ def _create_input_tensors():
   resized_image, image, _ = input_preprocess.preprocess_image_and_label(
       image,
       label=None,
-      crop_height=FLAGS.crop_size[0],
-      crop_width=FLAGS.crop_size[1],
+      crop_height=FLAGS.crop_height,
+      crop_width=FLAGS.crop_width,
       min_resize_value=FLAGS.min_resize_value,
       max_resize_value=FLAGS.max_resize_value,
       resize_factor=FLAGS.resize_factor,
@@ -108,11 +123,11 @@ def main(unused_argv):
 
     model_options = common.ModelOptions(
         outputs_to_num_classes={common.OUTPUT_TYPE: FLAGS.num_classes},
-        crop_size=FLAGS.crop_size,
-        atrous_rates=FLAGS.atrous_rates,
+        crop_size=[FLAGS.crop_height, FLAGS.crop_width],
+        atrous_rates=[FLAGS.atrous_rates1, FLAGS.atrous_rates2, FLAGS.atrous_rates3],
         output_stride=FLAGS.output_stride)
 
-    if tuple(FLAGS.inference_scales) == (1.0,):
+    if FLAGS.inference_scales == 1.0:
       tf.logging.info('Exported model performs single-scale inference.')
       predictions = model.predict_labels(
           image,

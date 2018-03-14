@@ -42,11 +42,18 @@ flags.DEFINE_integer('logits_kernel_size', 1,
 # We will support `mobilenet_v2' in the coming update. When using
 # 'xception_65', we set atrous_rates = [6, 12, 18] (output stride 16) and
 # decoder_output_stride = 4.
-flags.DEFINE_enum('model_variant', 'xception_65', ['xception_65'],
+# flags.DEFINE_enum('model_variant', 'xception_65', ['xception_65'],
+#                   'DeepLab model variants.')
+flags.DEFINE_string('model_variant', 'xception_65', 
                   'DeepLab model variants.')
 
-flags.DEFINE_multi_float('image_pyramid', None,
+
+# flags.DEFINE_multi_float('image_pyramid', None,
+#                          'Input scales for multi-scale feature extraction.')
+flags.DEFINE_float('image_pyramid', None,
                          'Input scales for multi-scale feature extraction.')
+
+
 
 flags.DEFINE_boolean('add_image_level_feature', True,
                      'Add image level feature.')
@@ -57,8 +64,12 @@ flags.DEFINE_boolean('aspp_with_batch_norm', True,
 flags.DEFINE_boolean('aspp_with_separable_conv', True,
                      'Use separable convolution for ASPP or not.')
 
-flags.DEFINE_multi_integer('multi_grid', None,
+# flags.DEFINE_multi_integer('multi_grid', None,
+#                            'Employ a hierarchy of atrous rates for ResNet.')
+flags.DEFINE_integer('multi_grid', None,
                            'Employ a hierarchy of atrous rates for ResNet.')
+
+
 
 # For `xception_65`, use decoder_output_stride = 4.
 flags.DEFINE_integer('decoder_output_stride', None,
@@ -68,8 +79,11 @@ flags.DEFINE_integer('decoder_output_stride', None,
 flags.DEFINE_boolean('decoder_use_separable_conv', True,
                      'Employ separable convolution for decoder or not.')
 
-flags.DEFINE_enum('merge_method', 'max', ['max', 'avg'],
+# flags.DEFINE_enum('merge_method', 'max', ['max', 'avg'],
+#                   'Scheme to merge multi scale features.')
+flags.DEFINE_string('merge_method', 'max', 
                   'Scheme to merge multi scale features.')
+
 
 FLAGS = flags.FLAGS
 

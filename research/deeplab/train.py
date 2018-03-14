@@ -68,8 +68,11 @@ flags.DEFINE_integer('save_summaries_secs', 600,
 
 # Settings for training strategry.
 
-flags.DEFINE_enum('learning_policy', 'poly', ['poly', 'step'],
+# flags.DEFINE_enum('learning_policy', 'poly', ['poly', 'step'],
+#                   'Learning rate policy for training.')
+flags.DEFINE_string('learning_policy', 'poly', 
                   'Learning rate policy for training.')
+
 
 # Use 0.007 when training on PASCAL augmented training set, train_aug. When
 # fine-tuning on PASCAL trainval set, use learning rate=0.0001.
@@ -99,8 +102,13 @@ flags.DEFINE_integer('train_batch_size', 8,
 flags.DEFINE_float('weight_decay', 0.00004,
                    'The value of the weight decay for training.')
 
-flags.DEFINE_multi_integer('train_crop_size', [513, 513],
-                           'Image crop size [height, width] during training.')
+# flags.DEFINE_multi_integer('train_crop_size', [513, 513],
+#                            'Image crop size [height, width] during training.')
+flags.DEFINE_integer('train_crop_height', 513, 
+                           'Image crop size height during training.')
+flags.DEFINE_integer('train_crop_width', 513, 
+                           'Image crop size width during training.')
+
 
 flags.DEFINE_float('last_layer_gradient_multiplier', 1.0,
                    'The gradient multiplier for last layers, which is used to '
@@ -141,7 +149,13 @@ flags.DEFINE_float('scale_factor_step_size', 0.25,
 # For `xception_65`, use atrous_rates = [12, 24, 36] if output_stride = 8, or
 # rates = [6, 12, 18] if output_stride = 16. Note one could use different
 # atrous_rates/output_stride during training/evaluation.
-flags.DEFINE_multi_integer('atrous_rates', None,
+# flags.DEFINE_multi_integer('atrous_rates', None,
+#                            'Atrous rates for atrous spatial pyramid pooling.')
+flags.DEFINE_integer('atrous_rates1', 6,
+                           'Atrous rates for atrous spatial pyramid pooling.')
+flags.DEFINE_integer('atrous_rates2', 12,
+                           'Atrous rates for atrous spatial pyramid pooling.')
+flags.DEFINE_integer('atrous_rates3', 18,
                            'Atrous rates for atrous spatial pyramid pooling.')
 
 flags.DEFINE_integer('output_stride', 16,
@@ -179,8 +193,8 @@ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
 
   model_options = common.ModelOptions(
       outputs_to_num_classes=outputs_to_num_classes,
-      crop_size=FLAGS.train_crop_size,
-      atrous_rates=FLAGS.atrous_rates,
+      crop_size=[FLAGS.train_crop_height, FLAGS.train_crop_width],
+      atrous_rates=[FLAGS.atrous_rates1, FLAGS.atrous_rates2, FLAGS.atrous_rates3],
       output_stride=FLAGS.output_stride)
   outputs_to_scales_to_logits = model.multi_scale_logits(
       samples[common.IMAGE],
@@ -230,7 +244,7 @@ def main(unused_argv):
     with tf.device(config.inputs_device()):
       samples = input_generator.get(
           dataset,
-          FLAGS.train_crop_size,
+          [FLAGS.train_crop_height, FLAGS.train_crop_width],
           clone_batch_size,
           min_resize_value=FLAGS.min_resize_value,
           max_resize_value=FLAGS.max_resize_value,

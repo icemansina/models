@@ -47,8 +47,13 @@ flags.DEFINE_string('checkpoint_dir', None, 'Directory of model checkpoints.')
 flags.DEFINE_integer('vis_batch_size', 1,
                      'The number of images in each batch during evaluation.')
 
-flags.DEFINE_multi_integer('vis_crop_size', [513, 513],
-                           'Crop size [height, width] for visualization.')
+# flags.DEFINE_multi_integer('vis_crop_size', [513, 513],
+#                            'Crop size [height, width] for visualization.')
+flags.DEFINE_integer('vis_crop_height', 513, 
+                           'Image crop size height during training.')
+flags.DEFINE_integer('vis_crop_width', 513, 
+                           'Image crop size width during training.')
+
 
 flags.DEFINE_integer('eval_interval_secs', 60 * 5,
                      'How often (in seconds) to run evaluation.')
@@ -56,15 +61,27 @@ flags.DEFINE_integer('eval_interval_secs', 60 * 5,
 # For `xception_65`, use atrous_rates = [12, 24, 36] if output_stride = 8, or
 # rates = [6, 12, 18] if output_stride = 16. Note one could use different
 # atrous_rates/output_stride during training/evaluation.
-flags.DEFINE_multi_integer('atrous_rates', None,
+# flags.DEFINE_multi_integer('atrous_rates', None,
+#                            'Atrous rates for atrous spatial pyramid pooling.')
+flags.DEFINE_integer('atrous_rates1', 6,
                            'Atrous rates for atrous spatial pyramid pooling.')
+flags.DEFINE_integer('atrous_rates2', 12,
+                           'Atrous rates for atrous spatial pyramid pooling.')
+flags.DEFINE_integer('atrous_rates3', 18,
+                           'Atrous rates for atrous spatial pyramid pooling.')
+
+
 
 flags.DEFINE_integer('output_stride', 16,
                      'The ratio of input to output spatial resolution.')
 
 # Change to [0.5, 0.75, 1.0, 1.25, 1.5, 1.75] for multi-scale test.
-flags.DEFINE_multi_float('eval_scales', [1.0],
+# flags.DEFINE_multi_float('eval_scales', [1.0],
+#                          'The scales to resize images for evaluation.')
+flags.DEFINE_float('eval_scales', 1.0,
                          'The scales to resize images for evaluation.')
+
+
 
 # Change to True for adding flipped images during test.
 flags.DEFINE_bool('add_flipped_images', False,
@@ -80,8 +97,12 @@ flags.DEFINE_string('vis_split', 'val',
 
 flags.DEFINE_string('dataset_dir', None, 'Where the dataset reside.')
 
-flags.DEFINE_enum('colormap_type', 'pascal', ['pascal', 'cityscapes'],
+# flags.DEFINE_enum('colormap_type', 'pascal', ['pascal', 'cityscapes'],
+#                   'Visualization colormap type.')
+flags.DEFINE_string('colormap_type', 'pascal', 
                   'Visualization colormap type.')
+
+
 
 flags.DEFINE_boolean('also_save_raw_predictions', False,
                      'Also save raw predictions.')
@@ -207,7 +228,7 @@ def main(unused_argv):
   g = tf.Graph()
   with g.as_default():
     samples = input_generator.get(dataset,
-                                  FLAGS.vis_crop_size,
+                                  [FLAGS.vis_crop_height, FLAGS.vis_crop_width],
                                   FLAGS.vis_batch_size,
                                   min_resize_value=FLAGS.min_resize_value,
                                   max_resize_value=FLAGS.max_resize_value,
@@ -218,11 +239,12 @@ def main(unused_argv):
 
     model_options = common.ModelOptions(
         outputs_to_num_classes={common.OUTPUT_TYPE: dataset.num_classes},
-        crop_size=FLAGS.vis_crop_size,
-        atrous_rates=FLAGS.atrous_rates,
+        crop_size=[FLAGS.vis_crop_height, FLAGS.vis_crop_width],
+        atrous_rates=[FLAGS.atrous_rates1, FLAGS.atrous_rates2, FLAGS.atrous_rates3],
         output_stride=FLAGS.output_stride)
 
-    if tuple(FLAGS.eval_scales) == (1.0,):
+    #if tuple(FLAGS.eval_scales) == (1.0):
+    if FLAGS.eval_scales == 1.0:
       tf.logging.info('Performing single-scale test.')
       predictions = model.predict_labels(
           samples[common.IMAGE],
